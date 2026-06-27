@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@theme {
+  /* === Wolkite University design tokens === */
+
+  /* Color: warm earth-tone palette, not generic navy/white university blue */
+  --color-parchment: #FBF6EE;       /* page background - warm, not stark white */
+  --color-ink: #1B3A2F;             /* deep ink-green - headers, primary text, structure */
+  --color-ink-soft: #2F5443;        /* lighter ink-green for secondary surfaces */
+  --color-terracotta: #C2491D;      /* primary brand accent - CTAs, links, "main" tag */
+  --color-terracotta-soft: #E8744A; /* hover/lighter terracotta */
+  --color-gold: #E8A33D;            /* energetic accent - tech/entertainment events */
+  --color-gold-soft: #F4C778;
+  --color-urgent: #B23A2E;          /* reserved ONLY for urgent notices/errors */
+  --color-paper: #FFFFFF;           /* card surfaces */
+  --color-paper-line: #E8DFD0;      /* hairline borders on parchment */
+
+  /* Category tag colors (noticeboard thumbtack metaphor) */
+  --color-cat-academic: #2F5443;
+  --color-cat-exam: #B23A2E;
+  --color-cat-tech: #E8A33D;
+  --color-cat-entertainment: #C2491D;
+  --color-cat-admin: #6B6356;
+  --color-cat-sports: #3B6E91;
+  --color-cat-internship: #7A5C9E;
+  --color-cat-research: #1B3A2F;
+
+  /* Typography */
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+
+  /* Radius - soft but not bubble-rounded; paper-card feel */
+  --radius-card: 0.625rem;
+}
+
+html {
+  font-family: var(--font-body);
+  background-color: var(--color-parchment);
+  color: var(--color-ink);
+}
+
+/* Keyboard focus visibility (accessibility floor from design skill) */
+:focus-visible {
+  outline: 2px solid var(--color-terracotta);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

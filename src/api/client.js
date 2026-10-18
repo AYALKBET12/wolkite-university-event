@@ -1,8 +1,12 @@
 import axios from 'axios';
 
-// In dev, Vite proxies /api -> http://localhost:5000. In production, set
-// VITE_API_BASE_URL to your deployed backend URL.
-const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
+// In dev, Vite proxies /api -> http://localhost:5000. Render provides a
+// hostname, while local production builds may provide a full API URL.
+const configuredApiUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+const normalizedApiUrl = configuredApiUrl?.replace(/\/+$/, '');
+const baseURL = normalizedApiUrl
+  ? `${/^https?:\/\//i.test(normalizedApiUrl) ? '' : 'https://'}${normalizedApiUrl}${/\/api$/i.test(normalizedApiUrl) ? '' : '/api'}`
+  : '/api';
 
 const api = axios.create({
   baseURL,

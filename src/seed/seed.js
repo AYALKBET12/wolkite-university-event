@@ -13,6 +13,13 @@ const { Campus, College, Department, User } = require('../models');
 const { CAMPUS_TYPES, ROLES, USER_STATUS } = require('../config/constants');
 
 async function seed() {
+  if (process.env.ALLOW_DESTRUCTIVE_SEED !== 'true') {
+    throw new Error('Seeding deletes existing organization and user records. Set ALLOW_DESTRUCTIVE_SEED=true to continue.');
+  }
+  if (!process.env.SEED_SUPERADMIN_PASSWORD) {
+    throw new Error('Set SEED_SUPERADMIN_PASSWORD to a strong, unique password before seeding.');
+  }
+
   await connectDB();
 
   console.log('Clearing existing org-structure and user data...');
@@ -132,7 +139,7 @@ async function seed() {
   console.log('Creating super_admin account...');
 
   const adminEmail = process.env.SEED_SUPERADMIN_EMAIL || 'admin@wolkiteuniversity.edu.et';
-  const adminPassword = process.env.SEED_SUPERADMIN_PASSWORD || 'ChangeMe123!';
+  const adminPassword = process.env.SEED_SUPERADMIN_PASSWORD;
 
   const superAdmin = await User.create({
     fullName: 'Wolkite University System Administrator',
@@ -173,7 +180,7 @@ async function seed() {
   console.log('-----------------------------------------');
   console.log('Login as Main Campus super_admin:');
   console.log('  email:   ', adminEmail);
-  console.log('  password:', adminPassword);
+  console.log('  password: the value supplied via SEED_SUPERADMIN_PASSWORD');
   console.log('-----------------------------------------');
   console.log('Sub-campus admins use the same password, with emails like:');
   console.log('  admin.eng@wolkiteuniversity.edu.et (Engineering)');

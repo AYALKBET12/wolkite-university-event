@@ -1,0 +1,38 @@
+services:
+  - type: web
+    runtime: node
+    name: wolkite-events-api
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        fromService:
+          type: static
+          name: wolkite-events-web
+          property: host
+
+  - type: static
+    name: wolkite-events-web
+    plan: free
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: wolkite-events-api
+          property: host

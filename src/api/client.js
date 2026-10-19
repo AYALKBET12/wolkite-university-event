@@ -10,6 +10,7 @@ const baseURL = normalizedApiUrl
 
 const api = axios.create({
   baseURL,
+  timeout: 15000,
   withCredentials: true, // send the httpOnly refreshToken cookie
 });
 

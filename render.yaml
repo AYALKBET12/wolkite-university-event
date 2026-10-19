@@ -24,7 +24,6 @@ services:
   - type: web
     name: wolkite-events-web
     runtime: static
-    plan: free
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     routes:

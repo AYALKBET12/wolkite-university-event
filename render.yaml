@@ -17,12 +17,13 @@ services:
         generateValue: true
       - key: CLIENT_URL
         fromService:
-          type: static
+          type: web
           name: wolkite-events-web
           property: host
 
-  - type: static
+  - type: web
     name: wolkite-events-web
+    runtime: static
     plan: free
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist

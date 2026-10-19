@@ -10,7 +10,8 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const connectDB = require('../config/db');
 const { Campus, College, Department, User } = require('../models');
-const { CAMPUS_TYPES, ROLES, USER_STATUS } = require('../config/constants');
+const { ROLES, USER_STATUS } = require('../config/constants');
+const { createOrganizationStructure } = require('./organizationStructure');
 
 async function seed() {
   if (process.env.ALLOW_DESTRUCTIVE_SEED !== 'true') {
@@ -30,110 +31,8 @@ async function seed() {
     User.deleteMany({}),
   ]);
 
-  // ---- 1. Campuses ----
-  console.log('Creating campuses...');
-
-  const mainCampus = await Campus.create({
-    name: 'Wolkite University Main Campus',
-    type: CAMPUS_TYPES.MAIN,
-    location: 'Wolkite, Gurage Zone, Central Ethiopia Regional State',
-    latitude: 8.2833,
-    longitude: 37.7833,
-    contactEmail: 'info@wolkiteuniversity.edu.et',
-  });
-
-  const engineeringCampus = await Campus.create({
-    name: 'Wolkite Engineering Sub-Campus',
-    type: CAMPUS_TYPES.SUB,
-    parentCampusId: mainCampus._id,
-    location: 'Wolkite, Gurage Zone, Central Ethiopia Regional State',
-    latitude: 8.2833,
-    longitude: 37.7833,
-    contactEmail: 'engineering@wolkiteuniversity.edu.et',
-  });
-
-  const butajiraCampus = await Campus.create({
-    name: 'Butajira Social Science Sub-Campus',
-    type: CAMPUS_TYPES.SUB,
-    parentCampusId: mainCampus._id,
-    location: 'Butajira, Gurage Zone, Central Ethiopia Regional State',
-    latitude: 8.1168,
-    longitude: 38.3745,
-    contactEmail: 'butajira@wolkiteuniversity.edu.et',
-  });
-
-  const medicineCampus = await Campus.create({
-    name: 'Medicine and Health Sub-Campus',
-    type: CAMPUS_TYPES.SUB,
-    parentCampusId: mainCampus._id,
-    location: 'Wolkite, Gurage Zone, Central Ethiopia Regional State',
-    latitude: 8.2833,
-    longitude: 37.7833,
-    contactEmail: 'health@wolkiteuniversity.edu.et',
-  });
-
-  console.log('  - Main Campus created');
-  console.log('  - 3 Sub-Campuses created (Engineering, Butajira Social Science, Medicine & Health)');
-
-  // ---- 2. Colleges + Departments (sample structure per campus) ----
-  console.log('Creating colleges and departments...');
-
-  const orgStructure = [
-    {
-      campus: mainCampus,
-      college: { name: 'College of Business and Economics', code: 'CBE' },
-      departments: [
-        { name: 'Department of Management', code: 'MGT' },
-        { name: 'Department of Economics', code: 'ECON' },
-      ],
-    },
-    {
-      campus: engineeringCampus,
-      college: { name: 'College of Engineering and Technology', code: 'CET' },
-      departments: [
-        { name: 'Department of Software Engineering', code: 'SWE' },
-        { name: 'Department of Electrical Engineering', code: 'EE' },
-      ],
-    },
-    {
-      campus: butajiraCampus,
-      college: { name: 'College of Social Sciences and Humanities', code: 'CSSH' },
-      departments: [
-        { name: 'Department of Sociology', code: 'SOC' },
-        { name: 'Department of Political Science', code: 'POLS' },
-      ],
-    },
-    {
-      campus: medicineCampus,
-      college: { name: 'College of Medicine and Health Sciences', code: 'CMHS' },
-      departments: [
-        { name: 'Department of Medicine', code: 'MED' },
-        { name: 'Department of Nursing', code: 'NUR' },
-      ],
-    },
-  ];
-
-  const createdDepartments = [];
-
-  for (const entry of orgStructure) {
-    const college = await College.create({
-      name: entry.college.name,
-      code: entry.college.code,
-      campusId: entry.campus._id,
-    });
-
-    for (const dept of entry.departments) {
-      const department = await Department.create({
-        name: dept.name,
-        code: dept.code,
-        collegeId: college._id,
-        campusId: entry.campus._id,
-      });
-      createdDepartments.push(department);
-    }
-
-    console.log(`  - ${entry.campus.name}: ${entry.college.name} (${entry.departments.length} departments)`);
-  }
+  // ---- 1. Campuses, colleges, and departments ----
+  const campuses = await createOrganizationStructure();
 
   // ---- 3. Super Admin account (Main Campus) ----
   console.log('Creating super_admin account...');
@@ -148,7 +47,7 @@ async function seed() {
     password: adminPassword,
     role: ROLES.SUPER_ADMIN,
     status: USER_STATUS.APPROVED,
-    campusId: mainCampus._id,
+    campusId: campuses.main._id,
   });
 
   console.log('  - super_admin created:', adminEmail);
@@ -157,9 +56,9 @@ async function seed() {
   console.log('Creating sample campus_admin accounts for each sub-campus...');
 
   const campusAdmins = [
-    { campus: engineeringCampus, idSuffix: 'ENG' },
-    { campus: butajiraCampus, idSuffix: 'BUT' },
-    { campus: medicineCampus, idSuffix: 'MED' },
+    { campus: campuses.engineering, idSuffix: 'ENG' },
+    { campus: campuses.butajira, idSuffix: 'BUT' },
+    { campus: campuses.medicine, idSuffix: 'MED' },
   ];
 
   for (const ca of campusAdmins) {

@@ -16,10 +16,7 @@ services:
       - key: JWT_REFRESH_SECRET
         generateValue: true
       - key: CLIENT_URL
-        fromService:
-          type: web
-          name: wolkite-events-web
-          property: host
+        value: https://wolkite-events-web.onrender.com
 
   - type: web
     name: wolkite-events-web
@@ -35,4 +32,4 @@ services:
         fromService:
           type: web
           name: wolkite-events-api
-          property: host
+          envVarKey: RENDER_EXTERNAL_URL

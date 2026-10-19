@@ -33,22 +33,45 @@ export default function Register() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingCampuses, setLoadingCampuses] = useState(true);
+  const [campusLoadError, setCampusLoadError] = useState('');
+  const [campusRetryCount, setCampusRetryCount] = useState(0);
 
   // Public campus/college/department lists - these don't require auth,
   // since a person filling out this form has no account yet.
   useEffect(() => {
+    let cancelled = false;
+
     async function loadCampuses() {
+      setLoadingCampuses(true);
+      setCampusLoadError('');
+
       try {
         const { data } = await campusApi.listPublic();
-        setCampuses(data.data.campuses);
-      } catch {
-        setCampuses([]);
+        if (!Array.isArray(data?.data?.campuses)) {
+          throw new Error('The campus list response was invalid');
+        }
+        if (!cancelled) {
+          setCampuses(data.data.campuses);
+        }
+      } catch (loadError) {
+        console.error('Unable to load registration campuses:', loadError);
+        if (!cancelled) {
+          setCampuses([]);
+          setCampusLoadError('Campus options could not be loaded. Check your connection and try again.');
+        }
       } finally {
-        setLoadingCampuses(false);
+        if (!cancelled) {
+          setLoadingCampuses(false);
+        }
       }
     }
+
     loadCampuses();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [campusRetryCount]);
 
   useEffect(() => {
     if (!form.campusId) {
@@ -220,12 +243,37 @@ export default function Register() {
               onChange={(e) => update('campusId', e.target.value)}
               required
             >
-              <option value="">{loadingCampuses ? 'Loading campuses…' : 'Select your campus'}</option>
+              <option value="">
+                {loadingCampuses
+                  ? 'Loading campuses…'
+                  : campusLoadError
+                    ? 'Campus list unavailable'
+                    : campuses.length === 0
+                      ? 'No campuses available'
+                      : 'Select your campus'}
+              </option>
               {campuses.map((c) => (
                 <option key={c._id} value={c._id}>{c.name}</option>
               ))}
             </Select>
           </Field>
+          {campusLoadError && (
+            <div className="mb-4 flex items-center justify-between gap-3 text-sm text-[var(--color-urgent)]" role="alert">
+              <span>{campusLoadError}</span>
+              <button
+                type="button"
+                className="shrink-0 font-semibold underline"
+                onClick={() => setCampusRetryCount((count) => count + 1)}
+              >
+                Try again
+              </button>
+            </div>
+          )}
+          {!loadingCampuses && !campusLoadError && campuses.length === 0 && (
+            <p className="mb-4 text-sm text-[var(--color-urgent)]" role="status">
+              No campuses are configured yet. Please contact the university administrator.
+            </p>
+          )}
 
           <div className="grid sm:grid-cols-2 gap-x-4">
             <Field label="College" htmlFor="collegeId" hint={!form.campusId ? 'Select a campus first' : undefined}>
